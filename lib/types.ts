@@ -23,3 +23,5 @@ export type ServiceErrorCode = "NOT_FOUND" | "VALIDATION_ERROR";
 export type ServiceResult<T> =
   | { success: true; data: T }
   | { success: false; error: { code: ServiceErrorCode; message: string } };
+
+export type ErrorResponse = { error: { code: string; message: string } };
