@@ -17,3 +17,9 @@ export type Status = z.infer<typeof StatusSchema>;
 export type Task = z.infer<typeof TaskSchema>;
 export type CreateTaskInput = z.infer<typeof CreateTaskSchema>;
 export type UpdateTaskInput = z.infer<typeof UpdateTaskSchema>;
+
+export type ServiceErrorCode = "NOT_FOUND" | "VALIDATION_ERROR";
+
+export type ServiceResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: { code: ServiceErrorCode; message: string } };
