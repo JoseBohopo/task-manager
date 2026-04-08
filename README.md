@@ -1,36 +1,232 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Task Manager
 
-## Getting Started
+A full-stack task management app built with Next.js 16 (App Router). Supports creating, toggling, and deleting tasks via both a web UI and a REST API.
 
-First, run the development server:
+> **Note:** Tasks are stored in an in-memory `Map`. Data does not persist between server restarts. This is intentional — see [Technical Decisions](#technical-decisions).
+
+---
+
+## Stack
+
+| Layer | Technology | Version |
+|---|---|---|
+| Framework | Next.js (App Router) | 16.2.2 |
+| Runtime | React | 19.2.4 |
+| Validation | Zod | 4.x |
+| Styling | Tailwind CSS | 4.x |
+| Testing | Vitest | 4.x |
+| Language | TypeScript | 5.x |
+
+---
+
+## Setup
+
+**Prerequisites:** Node.js 18+
 
 ```bash
+# 1. Install dependencies
+npm install
+
+# 2. Start the development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Available scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run dev       # Start dev server with hot reload
+npm run build     # Production build
+npm run start     # Start production server
+npm run lint      # Run ESLint
+npm run test      # Run tests in watch mode
+npm run test:run  # Run tests once (CI)
+```
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+├── app/
+│   ├── page.tsx              # Home page (Server Component)
+│   ├── layout.tsx            # Root layout
+│   ├── error.tsx             # Error boundary
+│   ├── loading.tsx           # Suspense loading UI
+│   ├── globals.css           # Global styles
+│   ├── actions/
+│   │   └── tasks.ts          # Server Actions (UI mutations)
+│   └── api/
+│       └── tasks/
+│           ├── route.ts      # GET /api/tasks, POST /api/tasks
+│           └── [id]/
+│               └── route.ts  # GET, PUT, DELETE /api/tasks/:id
+├── components/
+│   ├── TaskForm.tsx          # Create task form (Client Component)
+│   ├── TaskList.tsx          # Task list renderer
+│   ├── TaskCard.tsx          # Single task card with toggle/delete (Client Component)
+│   └── FormMessage.tsx       # Success/error feedback banner
+├── lib/
+│   ├── types.ts              # Zod schemas + TypeScript types
+│   ├── store.ts              # In-memory Map store (singleton)
+│   └── tasks.service.ts      # Business logic (CRUD operations)
+└── __tests__/
+    ├── tasks.service.test.ts # Service unit tests
+    └── api/
+        └── tasks.test.ts     # API route integration tests
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Architecture
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The app follows a layered architecture with a strict dependency direction:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+┌─────────────────────────────────────┐
+│           Browser (Client)          │
+│   TaskForm, TaskCard (useTransition) │
+└──────────────┬──────────────────────┘
+               │ Server Actions (progressive enhancement)
+               ▼
+┌─────────────────────────────────────┐
+│         app/actions/tasks.ts        │  ← revalidatePath after mutation
+│         app/api/tasks/route.ts      │  ← REST API (JSON)
+└──────────────┬──────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────┐
+│       lib/tasks.service.ts          │  ← Validates input via Zod
+│                                     │     Returns ServiceResult<T>
+└──────────────┬──────────────────────┘
+               │
+               ▼
+┌─────────────────────────────────────┐
+│          lib/store.ts               │  ← In-memory Map<string, Task>
+└─────────────────────────────────────┘
+```
+
+All service functions return a discriminated union `ServiceResult<T>`:
+
+```ts
+type ServiceResult<T> =
+  | { success: true;  data: T }
+  | { success: false; error: { code: ServiceErrorCode; message: string } }
+```
+
+Error codes: `NOT_FOUND` | `VALIDATION_ERROR`
+
+---
+
+## API Reference
+
+Base URL: `http://localhost:3000`
+
+### Task object
+
+```json
+{
+  "id": "uuid",
+  "title": "Buy milk",
+  "description": "Optional description",
+  "status": "PENDING" | "COMPLETED"
+}
+```
+
+### Endpoints
+
+#### `GET /api/tasks`
+
+Returns all tasks.
+
+**Response `200`**
+```json
+[
+  { "id": "...", "title": "Buy milk", "status": "PENDING" }
+]
+```
+
+---
+
+#### `POST /api/tasks`
+
+Creates a new task.
+
+**Request body**
+```json
+{
+  "title": "Buy milk",
+  "description": "Optional",
+  "status": "PENDING"
+}
+```
+
+| Field | Type | Required |
+|---|---|---|
+| `title` | `string` (min 1) | ✅ |
+| `description` | `string` | — |
+| `status` | `"PENDING" \| "COMPLETED"` | ✅ |
+
+**Response `201`** — created task object
+
+**Response `400`** — `VALIDATION_ERROR` or `PARSE_ERROR`
+```json
+{ "error": { "code": "VALIDATION_ERROR", "message": "..." } }
+```
+
+---
+
+#### `GET /api/tasks/:id`
+
+Returns a single task by ID.
+
+**Response `200`** — task object
+
+**Response `404`** — `NOT_FOUND`
+
+---
+
+#### `PUT /api/tasks/:id`
+
+Partially updates a task. All fields are optional.
+
+**Request body**
+```json
+{
+  "title": "Updated title",
+  "status": "COMPLETED"
+}
+```
+
+**Response `200`** — updated task object
+
+**Response `400`** — `VALIDATION_ERROR` or `PARSE_ERROR`
+
+**Response `404`** — `NOT_FOUND`
+
+---
+
+#### `DELETE /api/tasks/:id`
+
+Deletes a task.
+
+**Response `204`** — no body
+
+**Response `404`** — `NOT_FOUND`
+
+---
+
+## Technical Decisions
+
+**In-memory store instead of a database**
+The store is a module-level `Map<string, Task>`. This keeps the project focused on Next.js patterns (Server Actions, route handlers, App Router) without DB overhead. A real persistence layer (e.g. Prisma + SQLite) can replace `lib/store.ts` without touching the service or API layers.
+
+**Server Actions + REST API coexisting**
+The UI uses Server Actions (`app/actions/tasks.ts`) for mutations — they give `useTransition` support and automatic path revalidation with zero client-side fetch boilerplate. The REST API (`app/api/tasks/`) exists for external consumers and is tested independently. Both go through the same service layer.
+
+**Zod validation at the service boundary**
+Input is validated inside `tasks.service.ts` before touching the store. Route handlers and Server Actions pass raw input down and let the service return a typed `ServiceResult`. Validation logic lives in exactly one place.
+
+**Vitest over Jest**
+Vitest has native ESM support, shares the Vite transform pipeline (so `@/*` path aliases work without extra config), and is significantly faster. Route handlers are tested by importing and calling them directly with native `Request` objects — no HTTP server required.
