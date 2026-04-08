@@ -4,7 +4,7 @@ export const StatusSchema = z.enum(["PENDING", "COMPLETED"]);
 
 export const TaskSchema = z.object({
   id: z.string().min(1),
-  title: z.string().min(1),
+  title: z.string().trim().min(1),
   description: z.string().optional(),
   status: StatusSchema,
 });

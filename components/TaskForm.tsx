@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { ChangeEvent, ChangeEventHandler, useState, useTransition } from "react";
 import { CreateTaskSchema } from "@/lib/types";
 import FormMessage from "@/components/FormMessage";
 import { createTaskAction } from "@/app/actions/tasks";
@@ -19,6 +19,12 @@ export default function TaskForm() {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [isSubmitting, startSubmit] = useTransition();
+
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setFieldErrors({});
+    setFeedback(null);
+    setTitle(e.target.value);
+  };
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
@@ -60,7 +66,7 @@ export default function TaskForm() {
           id="title"
           type="text"
           value={title}
-          onChange={(e) => setTitle(e.target.value)}
+          onChange={handleChange}
           placeholder="Enter task title"
           aria-describedby={fieldErrors.title ? "title-error" : undefined}
           className="rounded-md border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:border-gray-600 dark:bg-gray-800 dark:focus:ring-blue-800"

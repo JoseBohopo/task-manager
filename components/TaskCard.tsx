@@ -1,8 +1,9 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { Task } from "@/lib/types";
 import { toggleTaskAction, deleteTaskAction } from "@/app/actions/tasks";
+import FormMessage from "@/components/FormMessage";
 
 type TaskCardProps = {
   task: Task;
@@ -11,26 +12,40 @@ type TaskCardProps = {
 export default function TaskCard({ task }: Readonly<TaskCardProps>) {
   const [isToggling, startToggle] = useTransition();
   const [isDeleting, startDelete] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   const isCompleted = task.status === "COMPLETED";
   const isBusy = isToggling || isDeleting;
 
   function handleToggle() {
-    startToggle(() => toggleTaskAction(task));
+    setError(null);
+    startToggle(async () => {
+      const result = await toggleTaskAction(task);
+      if (!result.success) {
+        setError(result.message);
+      }
+    });
   }
 
   function handleDelete() {
-    startDelete(() => deleteTaskAction(task.id));
+    setError(null);
+    startDelete(async () => {
+      const result = await deleteTaskAction(task.id);
+      if (!result.success) {
+        setError(result.message);
+      }
+    });
   }
 
   return (
-    <div
-      className={`flex items-start gap-3 rounded-lg border p-4 ${
-        isCompleted
-          ? "border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50"
-          : "border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-900"
-      }`}
-    >
+    <div>
+      <div
+        className={`flex items-start gap-3 rounded-lg border p-4 ${
+          isCompleted
+            ? "border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50"
+            : "border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-900"
+        }`}
+      >
       <input
         type="checkbox"
         checked={isCompleted}
@@ -88,6 +103,8 @@ export default function TaskCard({ task }: Readonly<TaskCardProps>) {
           <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
         </svg>
       </button>
+      </div>
+      {error && <FormMessage type="error" message={error} />}
     </div>
   );
 }
