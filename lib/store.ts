@@ -28,3 +28,7 @@ export function updateTask(id: string, input: UpdateTaskInput): Task | undefined
 export function deleteTask(id: string): boolean {
   return store.delete(id);
 }
+
+export function clearAll(): void {
+  store.clear();
+}
