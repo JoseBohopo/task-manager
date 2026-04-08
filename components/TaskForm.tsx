@@ -1,30 +1,29 @@
 "use client";
 
-import { useState } from "react";
-import { CreateTaskSchema, Task } from "@/lib/types";
-import { useCreateTask } from "@/hooks/useCreateTask";
+import { useState, useTransition } from "react";
+import { CreateTaskSchema } from "@/lib/types";
 import FormMessage from "@/components/FormMessage";
+import { createTaskAction } from "@/app/actions/tasks";
 
 type FieldErrors = {
   title?: string[];
   description?: string[];
 };
 
-type TaskFormProps = {
-  onCreated?: (task: Task) => void;
-};
+type Feedback = { type: "success" | "error"; message: string };
 
-export default function TaskForm({ onCreated }: Readonly<TaskFormProps>) {
+export default function TaskForm() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [completed, setCompleted] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-
-  const { createTask, isSubmitting, feedback } = useCreateTask();
+  const [feedback, setFeedback] = useState<Feedback | null>(null);
+  const [isSubmitting, startSubmit] = useTransition();
 
   async function handleSubmit(e: React.SyntheticEvent) {
     e.preventDefault();
     setFieldErrors({});
+    setFeedback(null);
 
     const payload = {
       title,
@@ -38,13 +37,16 @@ export default function TaskForm({ onCreated }: Readonly<TaskFormProps>) {
       return;
     }
 
-    const task = await createTask(parsed.data);
-    if (task) {
-      setTitle("");
-      setDescription("");
-      setCompleted(false);
-      onCreated?.(task);
-    }
+    startSubmit(async () => {
+      const result = await createTaskAction(parsed.data);
+      if (result.success) {
+        setTitle("");
+        setDescription("");
+        setCompleted(false);
+      } else {
+        setFeedback({ type: "error", message: result.message });
+      }
+    });
   }
 
   return (

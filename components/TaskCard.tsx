@@ -1,30 +1,26 @@
 "use client";
 
+import { useTransition } from "react";
 import { Task } from "@/lib/types";
-import { useToggleTask } from "@/hooks/useToggleTask";
-import { useDeleteTask } from "@/hooks/useDeleteTask";
+import { toggleTaskAction, deleteTaskAction } from "@/app/actions/tasks";
 
 type TaskCardProps = {
   task: Task;
-  onToggle: (updated: Task) => void;
-  onDelete: (id: string) => void;
 };
 
-export default function TaskCard({ task, onToggle, onDelete }: Readonly<TaskCardProps>) {
-  const { toggleTask, isToggling } = useToggleTask();
-  const { deleteTask, isDeleting } = useDeleteTask();
+export default function TaskCard({ task }: Readonly<TaskCardProps>) {
+  const [isToggling, startToggle] = useTransition();
+  const [isDeleting, startDelete] = useTransition();
 
   const isCompleted = task.status === "COMPLETED";
   const isBusy = isToggling || isDeleting;
 
-  async function handleToggle() {
-    const updated = await toggleTask(task);
-    if (updated) onToggle(updated);
+  function handleToggle() {
+    startToggle(() => toggleTaskAction(task));
   }
 
-  async function handleDelete() {
-    const success = await deleteTask(task.id);
-    if (success) onDelete(task.id);
+  function handleDelete() {
+    startDelete(() => deleteTaskAction(task.id));
   }
 
   return (
