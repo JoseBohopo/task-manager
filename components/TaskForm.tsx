@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CreateTaskSchema } from "@/lib/types";
+import { CreateTaskSchema, Task } from "@/lib/types";
 import { useCreateTask } from "@/hooks/useCreateTask";
 import FormMessage from "@/components/FormMessage";
 
@@ -10,7 +10,11 @@ type FieldErrors = {
   description?: string[];
 };
 
-export default function TaskForm() {
+type TaskFormProps = {
+  onCreated?: (task: Task) => void;
+};
+
+export default function TaskForm({ onCreated }: Readonly<TaskFormProps>) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [completed, setCompleted] = useState(false);
@@ -34,11 +38,12 @@ export default function TaskForm() {
       return;
     }
 
-    const success = await createTask(parsed.data);
-    if (success) {
+    const task = await createTask(parsed.data);
+    if (task) {
       setTitle("");
       setDescription("");
       setCompleted(false);
+      onCreated?.(task);
     }
   }
 
