@@ -81,6 +81,14 @@ describe("createTask", () => {
     if (result.success) return;
     expect(result.error.code).toBe("VALIDATION_ERROR");
   });
+
+  it("returns VALIDATION_ERROR for a whitespace-only title", () => {
+    const result = createTask({ title: "   ", status: "PENDING" });
+
+    expect(result.success).toBe(false);
+    if (result.success) return;
+    expect(result.error.code).toBe("VALIDATION_ERROR");
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -77,6 +77,16 @@ describe("POST /api/tasks", () => {
     expect(body.error.code).toBe("VALIDATION_ERROR");
   });
 
+  it("returns 400 VALIDATION_ERROR for a whitespace-only title", async () => {
+    const res = await createHandler(
+      makeRequest("POST", { title: "   ", status: "PENDING" })
+    );
+    const body = await res.json();
+
+    expect(res.status).toBe(400);
+    expect(body.error.code).toBe("VALIDATION_ERROR");
+  });
+
   it("returns 400 PARSE_ERROR for invalid JSON", async () => {
     const req = new Request("http://localhost/api/tasks", {
       method: "POST",
