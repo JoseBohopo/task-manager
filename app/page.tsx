@@ -2,9 +2,12 @@ import TaskForm from "@/components/TaskForm";
 import TaskList from "@/components/TaskList";
 import * as service from "@/lib/tasks.service";
 
-export default function Home() {
+export default async function Home() {
   const result = service.listTasks();
-  const tasks = result.success ? result.data : [];
+  if (!result.success) {
+    throw new Error(result.error.message);
+  }
+  const tasks = result.data;
 
   return (
     <main className="mx-auto max-w-lg px-4 py-12">
