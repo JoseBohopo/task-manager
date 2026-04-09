@@ -2,6 +2,10 @@
 
 A full-stack task management app built with Next.js 16 (App Router). Supports creating, toggling, and deleting tasks via both a web UI and a REST API.
 
+## Deploy: [Task Manager](https://task-manager-v0.netlify.app/)
+
+https://task-manager-v0.netlify.app/
+
 > **Note:** Tasks are stored in an in-memory `Map`. Data does not persist between server restarts. This is intentional — see [Technical Decisions](#technical-decisions).
 
 ---
