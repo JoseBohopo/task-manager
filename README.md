@@ -121,6 +121,10 @@ Error codes: `NOT_FOUND` | `VALIDATION_ERROR`
 
 ## API Reference
 
+**Interactive docs (Swagger UI):** [http://localhost:3000/docs](http://localhost:3000/docs)
+
+**OpenAPI spec (JSON):** [http://localhost:3000/api/docs](http://localhost:3000/api/docs)
+
 Base URL: `http://localhost:3000`
 
 ### Task object
@@ -230,3 +234,42 @@ Input is validated inside `tasks.service.ts` before touching the store. Route ha
 
 **Vitest over Jest**
 Vitest has native ESM support, shares the Vite transform pipeline (so `@/*` path aliases work without extra config), and is significantly faster. Route handlers are tested by importing and calling them directly with native `Request` objects — no HTTP server required.
+
+Actúa como mi Tech Lead senior con experiencia en frontend enterprise.
+
+Tengo este ticket de Jira:
+---
+meter Swagger
+---
+
+1️⃣ REQUIREMENT SUMMARY (Resumen de requisitos)
+- Resume en 3 bullets qué se está pidiendo realmente.
+
+2️⃣ USER & INTENT ANALYSIS
+- Usuario objetivo
+- Intención real del usuario
+
+3️⃣ SCOPE DEFINITION
+IN SCOPE:
+-
+OUT OF SCOPE:
+-
+
+4️⃣ PROPOSED SOLUTION
+- Una solución simple, directa y suficiente.
+
+5️⃣ IMPLEMENTATION PLAN (máx 6 pasos)
+1.
+2.
+3.
+
+6️⃣ DEFINITION OF DONE
+- [ ]
+- [ ]
+
+7️⃣ RISKS & DEPENDENCIES
+-
+
+🚦 JIRA CHECK:
+- ¿Debo mover el ticket a In Progress ahora?
+- Si no, ¿qué falta?
