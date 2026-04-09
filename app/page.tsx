@@ -9,11 +9,27 @@ export default async function Home() {
   }
   const tasks = result.data;
 
+  const count = tasks.length;
+
   return (
-    <main className="mx-auto max-w-lg px-4 py-12">
-      <h1 className="mb-8 text-2xl font-bold">Task Manager</h1>
+    <main id="main-content" className="mx-auto w-3xl px-4 py-10 sm:py-14">
+      <header className="mb-8">
+        <h1 className="text-[34px] font-bold tracking-tight leading-tight" style={{ color: "var(--text-primary)" }}>
+          Notes
+        </h1>
+        <p
+          aria-live="polite"
+          aria-atomic="true"
+          className="mt-1 text-[15px]"
+          style={{ color: "var(--text-tertiary)" }}
+        >
+          {count === 0 ? "No tasks" : `${count} tasks`}
+        </p>
+      </header>
+
       <TaskForm />
-      <section className="mt-8 flex flex-col gap-3">
+
+      <section aria-label="Task list" className="mt-8">
         <TaskList tasks={tasks} />
       </section>
     </main>
