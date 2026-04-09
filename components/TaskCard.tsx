@@ -1,15 +1,18 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useId, useState, useTransition } from "react";
 import { Task } from "@/lib/types";
-import { toggleTaskAction, deleteTaskAction } from "@/app/actions/tasks";
+import {
+  toggleTaskAction,
+  deleteTaskAction,
+} from "@/app/actions/tasks";
 import FormMessage from "@/components/FormMessage";
 
-type TaskCardProps = {
-  task: Task;
-};
+type TaskCardProps = { task: Task };
 
 export default function TaskCard({ task }: Readonly<TaskCardProps>) {
+  const id = useId();
+
   const [isToggling, startToggle] = useTransition();
   const [isDeleting, startDelete] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -17,13 +20,13 @@ export default function TaskCard({ task }: Readonly<TaskCardProps>) {
   const isCompleted = task.status === "COMPLETED";
   const isBusy = isToggling || isDeleting;
 
+  const statusId = `${id}-status`;
+
   function handleToggle() {
     setError(null);
     startToggle(async () => {
       const result = await toggleTaskAction(task);
-      if (!result.success) {
-        setError(result.message);
-      }
+      if (!result.success) setError(result.message);
     });
   }
 
@@ -31,80 +34,129 @@ export default function TaskCard({ task }: Readonly<TaskCardProps>) {
     setError(null);
     startDelete(async () => {
       const result = await deleteTaskAction(task.id);
-      if (!result.success) {
-        setError(result.message);
-      }
+      if (!result.success) setError(result.message);
     });
   }
 
   return (
-    <div>
+    <div
+      className="
+        flex flex-col h-full
+        rounded-(--radius-card)
+        bg-bg-secondary
+        shadow-(--shadow-card)
+        transition hover:shadow-(--shadow-card-hover)
+      "
+      aria-describedby={statusId}
+    >
+      {/* CONTENT */}
       <div
-        className={`flex items-start gap-3 rounded-lg border p-4 ${
-          isCompleted
-            ? "border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800/50"
-            : "border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-900"
-        }`}
+        className={`
+          flex items-center gap-3 px-4 py-3 transition-opacity
+          ${isCompleted ? "opacity-60" : ""}
+        `}
       >
-      <input
-        type="checkbox"
-        checked={isCompleted}
-        onChange={handleToggle}
-        disabled={isBusy}
-        className={`mt-0.5 h-4 w-4 cursor-pointer accent-blue-600 disabled:cursor-not-allowed ${isCompleted ? "opacity-40" : ""}`}
-        aria-label={`Mark "${task.title}" as ${isCompleted ? "pending" : "completed"}`}
-      />
-
-      <div className={`min-w-0 flex-1 ${isCompleted ? "opacity-40" : ""}`}>
-        <p
-          className={`text-sm font-medium ${
-            isCompleted
-              ? "text-gray-400 line-through dark:text-gray-500"
-              : "text-gray-900 dark:text-gray-100"
-          }`}
+        <button
+          type="button"
+          role="switch"
+          aria-checked={isCompleted}
+          aria-label={`Mark "${task.title}" as ${isCompleted ? "pending" : "completed"}`}
+          onClick={handleToggle}
+          disabled={isBusy}
+          className={[
+            "relative h-7.75 w-12.75 shrink-0 rounded-full",
+            "transition-colors duration-200 outline-none",
+            "focus-visible:shadow-(--focus-ring)",
+            isCompleted ? "bg-success" : "bg-bg-tertiary",
+            isBusy ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+          ].join(" ")}
         >
-          {task.title}
-        </p>
-        {task.description && (
+          <span
+            className={[
+              "absolute top-0.5 h-6.75 w-6.75 rounded-full bg-white",
+              "shadow-[0_2px_4px_rgba(0,0,0,0.25)] transition-[left] duration-200",
+              isCompleted ? "left-5.5" : "left-0.5",
+            ].join(" ")}
+          />
+        </button>
+
+        {/* TEXT */}
+        <div className="min-w-0 flex-1">
           <p
-            className={`mt-0.5 text-xs ${
-              isCompleted
-                ? "text-gray-300 line-through dark:text-gray-600"
-                : "text-gray-500 dark:text-gray-400"
-            }`}
+            className={`
+              text-[0.9375rem] font-semibold leading-snug
+              ${
+                isCompleted
+                  ? "line-through text-text-tertiary"
+                  : "text-text-primary"
+              }
+            `}
           >
-            {task.description}
+            {task.title}
           </p>
-        )}
+
+          {task.description && (
+            <p
+              className={`
+                mt-0.5 text-[0.8125rem] leading-snug
+                ${
+                  isCompleted
+                    ? "line-through text-text-tertiary"
+                    : "text-text-secondary"
+                }
+              `}
+            >
+              {task.description}
+            </p>
+          )}
+        </div>
+
+        {/* DELETE */}
+        <button
+          type="button"
+          onClick={handleDelete}
+          disabled={isBusy}
+          aria-label={`Delete "${task.title}"`}
+          className={`
+            ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full
+            text-destructive transition-colors outline-none
+            hover:bg-bg-tertiary
+            focus-visible:shadow-(--focus-ring)
+            ${isBusy ? "cursor-not-allowed opacity-40" : "cursor-pointer"}
+          `}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="18"
+            height="18"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M3 6h18" />
+            <path d="M8 6V4h8v2" />
+            <path d="M19 6l-1 14H6L5 6" />
+            <path d="M10 11v6M14 11v6" />
+          </svg>
+        </button>
       </div>
 
-      <button
-        onClick={handleDelete}
-        disabled={isBusy}
-        aria-label={`Delete "${task.title}"`}
-        className="ml-auto shrink-0 rounded p-1 text-red-400 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-40 dark:hover:bg-red-900/20 dark:hover:text-red-400"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
+      {/* ERROR / STATUS */}
+      {error && (
+        <div
+          id={statusId}
+          role="alert"
+          aria-live="assertive"
+          aria-atomic="true"
+          className="px-4 pb-3"
         >
-          <polyline points="3 6 5 6 21 6" />
-          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-          <path d="M10 11v6" />
-          <path d="M14 11v6" />
-          <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
-        </svg>
-      </button>
-      </div>
-      {error && <FormMessage type="error" message={error} />}
+          <FormMessage type="error" message={error} />
+        </div>
+      )}
     </div>
   );
 }

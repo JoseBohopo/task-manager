@@ -1,26 +1,105 @@
-@import "tailwindcss";
+﻿@import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg-primary:    #f2f1f6;
+  --bg-secondary:  #ffffff;
+  --bg-tertiary:   #e5e5ea;
+  --text-primary:  #1c1c1e;
+  --text-secondary:#3c3c43;
+  --text-tertiary: #8e8e93;
+  --accent:        #007aff;
+  --accent-hover:  #0056cc;
+  --destructive:   #ff3b30;
+  --success:       #34c759;
+  --separator:     rgba(60, 60, 67, 0.18);
+  --shadow-card:   0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --radius-card:   12px;
+  --radius-input:  10px;
+  --radius-btn:    10px;
+  --focus-ring:    0 0 0 3px rgba(0, 122, 255, 0.45);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg-primary:    #000000;
+    --bg-secondary:  #1c1c1e;
+    --bg-tertiary:   #2c2c2e;
+    --text-primary:  #f5f5f7;
+    --text-secondary:#ebebf5cc;
+    --text-tertiary: #8e8e93;
+    --accent:        #0a84ff;
+    --accent-hover:  #409cff;
+    --destructive:   #ff453a;
+    --success:       #30d158;
+    --separator:     rgba(235, 235, 245, 0.18);
+    --shadow-card:   0 1px 4px rgba(0,0,0,0.4);
+    --focus-ring:    0 0 0 3px rgba(10, 132, 255, 0.55);
   }
 }
 
+/* Expose CSS vars as Tailwind tokens (v4 @theme inline) */
+@theme inline {
+  --color-bg-primary:    var(--bg-primary);
+  --color-bg-secondary:  var(--bg-secondary);
+  --color-bg-tertiary:   var(--bg-tertiary);
+  --color-text-primary:  var(--text-primary);
+  --color-text-secondary:var(--text-secondary);
+  --color-text-tertiary: var(--text-tertiary);
+  --color-accent:        var(--accent);
+  --color-accent-hover:  var(--accent-hover);
+  --color-destructive:   var(--destructive);
+  --color-success:       var(--success);
+  --color-separator:     var(--separator);
+
+  --radius-card:  12px;
+  --radius-input: 10px;
+  --radius-btn:   10px;
+}
+
+/* ── Base ───────────────────────────────────────────────────── */
+*, *::before, *::after {
+  border-color: var(--separator);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui,
+    "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Focus visible (WCAG 2.4.7) ────────────────────────────── */
+input:focus-visible,
+textarea:focus-visible,
+button:focus-visible,
+[role="switch"]:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ── Skip link (WCAG 2.4.1) ────────────────────────────────── */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 100;
+  padding: 0.6rem 1.25rem;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: 0 0 var(--radius-card) 0;
+  text-decoration: none;
+}
+.skip-link:focus { left: 0; outline: none; }
+
+/* ── Reduced motion (WCAG 2.3.3) ───────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
